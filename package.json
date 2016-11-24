@@ -1,0 +1,31 @@
+{
+  "name": "csm",
+  "version": "0.0.1",
+  "private": false,
+  "scripts": {
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "test": "jest"
+  },
+  "dependencies": {
+    "native-base": "0.5.12",
+    "react": "15.3.2",
+    "react-addons-shallow-compare": "^15.4.1",
+    "react-native": "^0.37.0",
+    "react-native-drawer": "^2.3.0",
+    "react-native-html-parser": "0.0.4",
+    "react-native-storage": "^0.1.4",
+    "react-native-tab-view": "0.0.40",
+    "react-native-wechat": "^1.7.2",
+    "whatwg-fetch": "^2.0.0"
+  },
+  "jest": {
+    "preset": "jest-react-native"
+  },
+  "devDependencies": {
+    "babel-jest": "17.0.2",
+    "babel-preset-react-native": "1.9.0",
+    "jest": "17.0.2",
+    "jest-react-native": "17.0.2",
+    "react-test-renderer": "15.3.2"
+  }
+}
