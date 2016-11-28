@@ -46,7 +46,7 @@ import * as WeChat from 'react-native-wechat'
 console.disableYellowBox = true
 
 // ADBlock.js
-const adBlock = '!function(){function a(a,b){if(a&&b)for(var c=a.length-1;c>=0&&b(a[c])!==!1;c--);}function b(a,b){return!!b&&a.substr(0,b.length)===b}function c(a){return window.getComputedStyle(a,null)}function e(a){return!!(b(a,"topAd")||b(a,"top_ad")||b(a,"BAIDU_SSP_")||b(a,"BAIDU_DSPUI"))}function f(a){var b=c(a);if("fixed"!==b.position)return!1;var d=parseInt(b.left,10),e=parseInt(b.right,10),f=parseInt(b.bottom,10);return!isNaN(d)&&d<11||(!isNaN(e)&&e<11||!isNaN(f)&&f<11)}function g(a){var b=a.parentNode||a.parentElement;b&&b.removeChild(a)}function h(){var b=document.getElementsByTagName("div");a(b,function(a){a.id&&e(a.id)&&g(a)})}function j(){for(var b=0;b<i.length;b++){var c=document.getElementsByClassName(i[b]);a(c,g)}}function k(){var b=document.getElementsByTagName("ins");a(b,function(a){f(a)&&g(a)})}window.__ADBLOCK_LOADED=!0;var i=["adsbygoogle","J_adv","left-ad","adpx250","lxb-container","header","mobile_header","section_top","footer","mobile_footer"];h(),j(),k()}();'
+const adBlock = '!function(){function a(a,b){if(a&&b)for(var c=a.length-1;c>=0&&b(a[c])!==!1;c--);}function b(a,b){return!!b&&a.substr(0,b.length)===b}function c(a){return window.getComputedStyle(a,null)}function e(a){return!!(b(a,"topAd")||b(a,"top_ad")||b(a,"BAIDU_SSP_")||b(a,"BAIDU_DSPUI"))}function f(a){var b=c(a);if("fixed"!==b.position)return!1;var d=parseInt(b.left,10),e=parseInt(b.right,10),f=parseInt(b.bottom,10);return!isNaN(d)&&d<11||(!isNaN(e)&&e<11||!isNaN(f)&&f<11)}function g(a){var b=a.parentNode||a.parentElement;b&&b.removeChild(a)}function h(){var b=document.getElementsByTagName("div");a(b,function(a){a.id&&e(a.id)&&g(a)})}function j(){for(var b=0;b<i.length;b++){var c=document.getElementsByClassName(i[b]);a(c,g)}}function k(){var b=document.getElementsByTagName("ins");a(b,function(a){f(a)&&g(a)})}window.__ADBLOCK_LOADED=!0;var i=["adsbygoogle","J_adv","left-ad","adpx250","lxb-container","header","mobile_header","section_top","footer","mobile_footer"];h(),j(),k(),$("#essay-body").css("margin-top",0)}();'
 
 
 // 存储
@@ -57,6 +57,12 @@ var storage = new Storage({
   enableCache: true,
 })
 
+// 调试日志
+function logger(...params) {
+  if (__DEV__) {
+    console.log(...params)
+  }
+}
 
 // API请求
 function fetch_list_with_start(tag='', start=0) {
@@ -91,7 +97,7 @@ function fetch_list_with_start(tag='', start=0) {
       }
       return []
     }).catch(error => {
-      console.log(`***fetch_list_with_start: ${error}***`)
+      logger(`***fetch_list_with_start: ${error}***`)
       // FIX: ALERT
       return []
     })
@@ -103,7 +109,7 @@ function fetch_list_with_account(account, status, start=0) {
     uri = `http://chuansong.me${account}/hot`
   }
 
-  console.log('**fetch_list_with_account uri**', uri)
+  logger('**fetch_list_with_account uri**', uri)
 
   let resp = {items: []}
 
@@ -123,7 +129,7 @@ function fetch_list_with_account(account, status, start=0) {
             created_at: created_at,
           })
         }
-        console.log('**fetch_list_with_account items**', items)
+        logger('**fetch_list_with_account items**', items)
         // 获取其他信息 暂时拿不到
         const username = '' // doc.getElementsByClassName('topic_name_editor')[0].textContent.trim()
         const wechat_id = '' // doc.getElementsByClassName('section_top')[0].textContent.trim()
@@ -138,7 +144,7 @@ function fetch_list_with_account(account, status, start=0) {
       }
       return resp
     }).catch(error => {
-      console.log(`***fetch_list_with_account: ${error}***`)
+      logger(`***fetch_list_with_account: ${error}***`)
       // FIX: ALERT
       return resp
     })
@@ -212,6 +218,7 @@ class HTMLView extends React.Component {
           <Icon name="ios-share-outline" style={{color: '#0A69FE', marginRight: 20}} onPress={ () =>{
             WeChat.isWXAppInstalled().then((flag) => {
               if (flag) {
+                // Fix：换成带图标形式的
                 ActionSheetIOS.showActionSheetWithOptions({
                   options: ['微信朋友圈', '微信朋友', '取消'],
                   cancelButtonIndex: 2,
@@ -432,7 +439,7 @@ class AccountMessageView extends React.Component {
 
   _onEndReached() {
     // FIX: 触到底部不刷新（还是速度太慢）这个太恶心了 要改
-    console.log('**reached end**', this.state.currentStart)
+    logger('**reached end**', this.state.currentStart)
 
     if (this.state.isEndReached) {
       return;
@@ -476,7 +483,7 @@ class AccountMessageView extends React.Component {
           }
         })
       }}>
-        <Text>{rowData.title}</Text>
+        <Text style={styles.listText}>{rowData.title}</Text>
       </ListItem>
     )
   }
@@ -597,44 +604,6 @@ class TabMessages extends React.Component {
 
 }
 
-// 用户, 「废弃」
-class AccountView extends React.Component {
-
-  render() {
-    // 这样式看着想吐, Tabs居然同时更新的
-    /*
-    <View style={{flex: 1, flexDirection: 'row', padding: 10}}>
-            <Thumbnail square size={150} source={{uri: 'http://q.chuansong.me/ws-zy-sd.jpg'}} style={{flex: 0.4}} />
-            <View style={{justifyContent: 'center', flex: 0.6}}>
-              <Badge primary>微博搞笑</Badge>
-              <View style={{flexDirection: 'row', 'alignItems': 'center', marginTop: 5}}>
-                <Text style={{fontSize: 12}}>微信ID：</Text>
-                <Text note>ellipse42</Text>
-              </View>
-              <View style={{flexDirection: 'row'}}>
-                <Text style={{fontSize: 12, flex: 0.3}}>介绍信息：</Text>
-                <Text numberOfLines={4} flexWrap='wrap' style={{flex: 0.7}}>我要做像疯一样的男子，没心没肺的人啊</Text>
-              </View>
-            </View>
-          </View>
-    */
-
-    // Fix：关注此人
-    // tab好难用，换
-
-    return (
-      <Container style={{marginTop: 64}}>
-        <Content>
-          <Tabs style={{backgroundColor: 'red'}}>
-            <TabMessages tabLabel="最新" status="new" account_url={this.props.account_url} navigator={this.props.navigator} username={this.props.username} />
-            <TabMessages tabLabel="热门" status="hot" account_url={this.props.account_url} username={this.props.username} />
-          </Tabs>
-        </Content>
-      </Container>
-    )
-  }
-
-}
 
 class Account extends React.Component {
   state = {
@@ -690,7 +659,6 @@ class TagListView extends React.Component {
       isBottomReached: false,
       isLoading: true,
       items: items,
-      dataSource: ds.cloneWithRows(items),
       currentStart: 0,
     };
   }
@@ -700,7 +668,6 @@ class TagListView extends React.Component {
     fetch_list_with_start(this.props.tag, this.state.currentStart).then(items => {
       this.setState({
         items: items,
-        dataSource: this.state.dataSource.cloneWithRows(items),
         isLoading: false,
         isEndReached: items.length == 0 ? true: false,
         currentStart: this.state.currentStart + items.length,
@@ -718,7 +685,6 @@ class TagListView extends React.Component {
 
     this.setState({
       items: items,
-      dataSource: this.state.dataSource.cloneWithRows(items),
     });
   }
 
@@ -732,7 +698,6 @@ class TagListView extends React.Component {
     fetch_list_with_start(this.props.tag).then(items => {
       this.setState({
         items: items,
-        dataSource: this.state.dataSource.cloneWithRows(items),
         isLoading: false,
         isEndReached: items.length === 0 ? true: false,
         isRefreshing: false,
@@ -743,7 +708,7 @@ class TagListView extends React.Component {
 
   _onEndReached() {
     // FIX: 触到底部不刷新（还是速度太慢）这个太恶心了 要改
-    console.log('**reached end**', this.state.currentStart)
+    logger('**reached end**', this.state.currentStart)
 
     if (this.state.isEndReached) {
       return;
@@ -762,7 +727,6 @@ class TagListView extends React.Component {
       tmps.push.apply(tmps, items)
       this.setState({
         items: tmps,
-        dataSource: this.state.dataSource.cloneWithRows(tmps),
         isLoading: false,
         isRefreshing: false,
         isEndReached: tmps.length === 0 ? true: false,
@@ -776,7 +740,7 @@ class TagListView extends React.Component {
       return (
         <View style={[styles.container, {alignItems: 'center', justifyContent: 'center'}]}>
           <Button small style={{width: 200, alignSelf: 'center', }} onPress={() => {
-            // 首次还没授权加载的时候
+            // 首次还没授权加载的时候， 有ui偏移的bug
             this._onRefresh()
           }}>点击刷新页面</Button>
         </View>
@@ -790,7 +754,9 @@ class TagListView extends React.Component {
           renderScrollComponent={props => <RecyclerViewBackedScrollView {...props} />}
           renderSeparator={(sectionID, rowID) => <View key={`${sectionID}-${rowID}`} style={styles.separator} />}
           onEndReached={this._onEndReached.bind(this)}
-          onEndReachedThreshold={0}
+          onEndReachedThreshold={100}
+          pageSize={20}
+          initialListSize={20}
           enableEmptySections={true}
           renderFooter={this.renderFooter.bind(this)}
           refreshControl={
