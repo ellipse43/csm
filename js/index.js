@@ -794,13 +794,17 @@ class TagListView extends React.Component {
         <Thumbnail square size={50} source={{uri: rowData.avatar}} />
         <View style={{flexDirection: 'row'}}>
           <Button rounded small info style={{height: 20}} onPress={() => {
-            // 关注帐号
             this.props.navigator.push({
               component: Account,
               title: rowData.username,
               backButtonTitle: '返回',
               leftButtonTitle: '',
               leftButtonIcon: null,
+              // rightButtonTitle: '收藏',
+              // onRightButtonPress: () => {
+              //   logger('***right***')
+
+              // },
               passProps: {
                 navigator: this.props.navigator,
                 account_url: rowData.account_url,
@@ -840,7 +844,7 @@ class ControlPanel extends React.Component {
   render() {
     // FIX：设置，好卡卡
     return (
-      <View style={{flex: 1, backgroundColor: '#FFF'}}>
+      <View style={{flex: 1, backgroundColor: 'rgb(171, 25, 66)'}}>
         <View style={{alignSelf: 'center', marginTop: 60}}>
           <Image source={require('../imgs/csm.png')} />
         </View>
@@ -855,8 +859,8 @@ class ControlPanel extends React.Component {
               leftButtonIcon: null,
             })
           }}>
-            <Icon name="ios-pricetag-outline" style={{ color: '#0A69FE' }} />
-            <Text>主题分类</Text>
+            <Icon name="md-pricetag" style={{ color: '#FFF', fontSize: 18 }} />
+            <Text style={{ fontSize: 14, color: '#FFF' }}>主题分类</Text>
           </ListItem>
           <ListItem iconLeft onPress={() => {
             let nav = this.props.getNavigator()
@@ -868,13 +872,13 @@ class ControlPanel extends React.Component {
               leftButtonIcon: null,
             })
           }}>
-            <Icon name="ios-heart-outline" style={{ color: '#0A69FE' }} />
-            <Text>收藏</Text>
+            <Icon name="md-heart" style={{ color: '#FFF', fontSize: 18 }} />
+            <Text style={{ fontSize: 14, color: '#FFF' }}>收藏</Text>
           </ListItem>
-          <ListItem iconLeft>
-            <Icon name="ios-settings-outline" style={{ color: '#0A69FE' }} />
-            <Text>设置</Text>
-          </ListItem>
+          {/*<ListItem iconLeft>
+            <Icon name="md-settings" style={{ color: '#FFF', fontSize: 18 }} />
+            <Text style={{ fontSize: 14, color: '#FFF' }}>设置</Text>
+          </ListItem>*/}
         </List>
       </View>
     )
