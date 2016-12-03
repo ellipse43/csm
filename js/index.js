@@ -41,6 +41,7 @@ import VectorIcon from 'react-native-vector-icons/Ionicons'
 import Storage from 'react-native-storage'
 import { TabViewAnimated, TabBarTop } from 'react-native-tab-view'
 import * as WeChat from 'react-native-wechat'
+import Modal from 'react-native-modalbox'
 
 // 配置
 console.disableYellowBox = true
@@ -216,37 +217,63 @@ class HTMLView extends React.Component {
           <Icon name="ios-share-outline" style={styles.htmlViewToolbar} onPress={ () =>{
             WeChat.isWXAppInstalled().then((flag) => {
               if (flag) {
-                // Fix：换成带图标形式的
-                ActionSheetIOS.showActionSheetWithOptions({
-                  options: ['微信朋友圈', '微信朋友', '取消'],
-                  cancelButtonIndex: 2,
-                }, (buttonIndex) => {
-                  if (buttonIndex === 0) {
-                    WeChat.shareToTimeline({
-                      type: 'news',
-                      title: this.props.title,
-                      webpageUrl: this.props.uri,
-                    })
-                  } else if (buttonIndex === 1) {
-                    WeChat.shareToSession({
-                      type: 'news',
-                      title: this.props.username,
-                      description: this.props.title,
-                      webpageUrl: this.props.uri,
-                    })
-                  }
-                })
+                this._shareModal.open()
               } else {
-                ActionSheetIOS.showActionSheetWithOptions({
-                  options: ['取消'],
-                  cancelButtonIndex: 0,
-                }, (buttonIndex) => {})
+                this._shareModalSimple.open()
               }
             })
 
           }} />
           {toolbarView}
         </View>
+
+        <Modal
+          style={{height: 40}}
+          position={'bottom'}
+          ref={(ref) => this._shareModalSimple = ref} >
+          <List>
+            <ListItem style={{}} onPress={() => {
+              this._shareModalSimple.close()
+            }}>
+              <Text style={[styles.listText]}>取消</Text>
+            </ListItem>
+          </List>
+        </Modal>
+
+        <Modal
+          style={{height: 150}}
+          position={'bottom'}
+          ref={(ref) => this._shareModal = ref} >
+          <List>
+            <ListItem style={{}} onPress={() => {
+              WeChat.shareToSession({
+                type: 'news',
+                title: this.props.username,
+                description: this.props.title,
+                webpageUrl: this.props.uri,
+              })
+            }}>
+              <Image source={require('../imgs/wechat_s.png')} />
+              <Text style={[styles.listText, {marginLeft: 10}]}>微信</Text>
+            </ListItem>
+            <ListItem onPress={() => {
+              WeChat.shareToTimeline({
+                type: 'news',
+                title: this.props.title,
+                webpageUrl: this.props.uri,
+              })
+            }}>
+              <Image source={require('../imgs/wechat_moment.png')} />
+              <Text style={[styles.listText, {marginLeft: 10}]}>朋友圈</Text>
+            </ListItem>
+
+            <ListItem style={{}} onPress={() => {
+              this._shareModal.close()
+            }}>
+              <Text style={[styles.listText]}>取消</Text>
+            </ListItem>
+          </List>
+        </Modal>
       </View>
     )
   }
