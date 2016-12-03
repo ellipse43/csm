@@ -109,8 +109,6 @@ function fetch_list_with_account(account, status, start=0) {
     uri = `http://chuansong.me${account}/hot`
   }
 
-  logger('**fetch_list_with_account uri**', uri)
-
   let resp = {items: []}
 
   // 需要改userAgent
@@ -183,7 +181,7 @@ class HTMLView extends React.Component {
     let toolbarView = null
 
     if (this.state.collected === false) {
-      toolbarView = <Icon name="ios-heart-outline" style={{color: '#0A69FE', marginRight: 20}} onPress={() => {
+      toolbarView = <Icon name="ios-heart-outline" style={styles.htmlViewToolbar} onPress={() => {
             storage.save({
               key: 'collectedArticle',
               id: this.props.uri,
@@ -195,7 +193,7 @@ class HTMLView extends React.Component {
             this.setState({collected: true})
           }} />
     } else if (this.state.collected === true) {
-      toolbarView = <Icon name="ios-heart" style={{color: '#0A69FE', marginRight: 20}} onPress={() => {
+      toolbarView = <Icon name="ios-heart" style={styles.htmlViewToolbar} onPress={() => {
             storage.remove({
               key: 'collectedArticle',
               id: this.props.uri,
@@ -203,7 +201,7 @@ class HTMLView extends React.Component {
             this.setState({collected: false})
           }} />
     } else {
-      toolbarView = <Icon name="ios-heart-outline" style={{color: '#0A69FE', marginRight: 20}} />
+      toolbarView = <Icon name="ios-heart-outline" style={styles.htmlViewToolbar} />
     }
 
     return (
@@ -215,7 +213,7 @@ class HTMLView extends React.Component {
           style={{flex: 0.93}}
         />
         <View style={{flex: 0.07, borderTopWidth: 2, borderColor: '#0A69FE', justifyContent: 'flex-end', alignItems: 'center', flexDirection: 'row'}}>
-          <Icon name="ios-share-outline" style={{color: '#0A69FE', marginRight: 20}} onPress={ () =>{
+          <Icon name="ios-share-outline" style={styles.htmlViewToolbar} onPress={ () =>{
             WeChat.isWXAppInstalled().then((flag) => {
               if (flag) {
                 // Fix：换成带图标形式的
@@ -343,9 +341,8 @@ class TagsView extends React.Component {
 
 }
 
-
-// 收藏页面
-class CollectedView extends React.Component {
+// 收藏公众号页面 (分开写，还是在里面做类型判断写呢。。。
+class AccountCollectedView extends React.Component {
 
   constructor(props) {
     super(props);
@@ -354,6 +351,79 @@ class CollectedView extends React.Component {
       isLoading: true,
       items: [],
     };
+  }
+
+  componentWillMount() {
+    // 本地存储
+    storage.getAllDataForKey('collectedAccount').then(items => {
+      this.setState({
+        items: items.reverse(),
+        isLoading: false,
+      })
+    }).catch(err => {
+      this.setState({
+        items: [],
+        isLoading: false,
+      })
+    })
+  }
+
+  renderRow(rowData: Map, sectionID: number, rowID: number) {
+    return (
+      <ListItem button onPress={() => {
+        this.props.navigator.push({
+          component: AccountView,
+          title: rowData.title,
+          backButtonTitle: '返回',
+          leftButtonTitle: '',
+          leftButtonIcon: null,
+          rightButtonTitle: '取消收藏',
+          onRightButtonPress: () => {
+            storage.remove({
+              key: 'collectedAccount',
+              id: rowData.uri,
+            })
+          },
+          passProps: {
+            navigator: this.props.navigator,
+            account_url: rowData.uri,
+            username: rowData.title,
+          }
+        })
+      }}>
+        <Text style={[styles.listText, {textAlign: 'center'}]}>{rowData.title}</Text>
+      </ListItem>
+    )
+  }
+
+  render() {
+    return (
+      <View style={styles.container}>
+        <List
+          dataArray={this.state.items}
+          renderRow={this.renderRow.bind(this)}
+          renderScrollComponent={props => <RecyclerViewBackedScrollView {...props} />}
+          renderSeparator={(sectionID, rowID) => <View key={`${sectionID}-${rowID}`} style={styles.separator} />}
+          enableEmptySections={true}
+        />
+      </View>
+    )
+  }
+
+}
+
+
+// 收藏文章页面
+class ArticleCollectedView extends React.Component {
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      isLoading: true,
+      items: [],
+    }
+    console.log('**bili')
   }
 
   componentWillMount() {
@@ -407,6 +477,57 @@ class CollectedView extends React.Component {
     )
   }
 
+}
+
+// 收藏页面
+class CollectedView extends React.Component {
+
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      index: 0,
+      routes: [
+        { key: '1', title: '公众号' },
+        { key: '2', title: '文章' },
+      ],
+    }
+
+    console.log('**acfun**')
+  }
+
+  _handleChangeTab(index) {
+    this.setState({ index })
+  }
+
+  _renderHeader(props) {
+    return <TabBarTop {...props} />
+  }
+
+  _renderScene(route) {
+    // console.log('***route***', route)
+    switch (route.route.key) {
+    case '1':
+      return <AccountCollectedView tabLabel="公众号" navigator={this.props.navigator} />
+    case '2':
+      console.log('**ki**')
+      return <ArticleCollectedView tabLabel="文章" navigator={this.props.navigator} />
+    default:
+      return null
+    }
+  }
+
+  render() {
+    return (
+      <TabViewAnimated
+        style={{flex: 1, marginTop: 64}}
+        navigationState={this.state}
+        renderScene={this._renderScene.bind(this)}
+        renderHeader={this._renderHeader.bind(this)}
+        onRequestChangeTab={this._handleChangeTab.bind(this)}
+      />
+    )
+  }
 }
 
 
@@ -605,7 +726,7 @@ class TabMessages extends React.Component {
 }
 
 
-class Account extends React.Component {
+class AccountView extends React.Component {
   state = {
     index: 0,
     routes: [
@@ -660,6 +781,9 @@ class TagListView extends React.Component {
       isLoading: true,
       items: items,
       currentStart: 0,
+
+      //
+      isCollected: false,
     };
   }
 
@@ -740,7 +864,7 @@ class TagListView extends React.Component {
       return (
         <View style={[styles.container, {alignItems: 'center', justifyContent: 'center'}]}>
           <Button small style={{width: 200, alignSelf: 'center', }} onPress={() => {
-            // 首次还没授权加载的时候， 有ui偏移的bug
+            // 首次还没授权加载的时候， 有ui偏移的bug，点击然后禁用才对
             this._onRefresh()
           }}>点击刷新页面</Button>
         </View>
@@ -763,11 +887,11 @@ class TagListView extends React.Component {
               <RefreshControl
                 refreshing={this.state.isRefreshing}
                 onRefresh={this._onRefresh.bind(this)}
-                tintColor='rgb(153, 153, 153)'
+                tintColor={textColor}
                 title="加载..."
-                titleColor='rgb(153, 153, 153)'
-                colors={['rgb(153, 153, 153)']}
-                progressBackgroundColor='rgb(153, 153, 153)'
+                titleColor={textColor}
+                colors={[textColor]}
+                progressBackgroundColor={textColor}
               />
             }
         />
@@ -794,23 +918,56 @@ class TagListView extends React.Component {
         <Thumbnail square size={50} source={{uri: rowData.avatar}} />
         <View style={{flexDirection: 'row'}}>
           <Button rounded small info style={{height: 20}} onPress={() => {
-            this.props.navigator.push({
-              component: Account,
-              title: rowData.username,
-              backButtonTitle: '返回',
-              leftButtonTitle: '',
-              leftButtonIcon: null,
-              // rightButtonTitle: '收藏',
-              // onRightButtonPress: () => {
-              //   logger('***right***')
-
-              // },
-              passProps: {
-                navigator: this.props.navigator,
-                account_url: rowData.account_url,
-                username: rowData.username,
-              }
+            // Fix：检查是否收藏， navigator没法使用setState更新
+            storage.load({
+              key: 'collectedAccount',
+              id: rowData.account_url,
+            }).then(ret => {
+              this.props.navigator.push({
+                component: AccountView,
+                title: rowData.username,
+                backButtonTitle: '返回',
+                leftButtonTitle: '',
+                leftButtonIcon: null,
+                rightButtonTitle: '取消收藏',
+                onRightButtonPress: () => {
+                  storage.remove({
+                    key: 'collectedAccount',
+                    id: rowData.account_url,
+                  })
+                },
+                passProps: {
+                  navigator: this.props.navigator,
+                  account_url: rowData.account_url,
+                  username: rowData.username,
+                }
+              })
+            }).catch(err => {
+              this.props.navigator.push({
+                component: AccountView,
+                title: rowData.username,
+                backButtonTitle: '返回',
+                leftButtonTitle: '',
+                leftButtonIcon: null,
+                rightButtonTitle: '收藏',
+                onRightButtonPress: () => {
+                  storage.save({
+                    key: 'collectedAccount',
+                    id: rowData.account_url,
+                    rawData: {
+                      uri: rowData.account_url,
+                      title: rowData.username,
+                    },
+                  })
+                },
+                passProps: {
+                  navigator: this.props.navigator,
+                  account_url: rowData.account_url,
+                  username: rowData.username,
+                }
+              })
             })
+
           }}>{rowData.username}</Button>
           <Text style={{fontSize: 8}}> • {rowData.created_at}</Text>
         </View>
@@ -844,7 +1001,7 @@ class ControlPanel extends React.Component {
   render() {
     // FIX：设置，好卡卡
     return (
-      <View style={{flex: 1, backgroundColor: 'rgb(171, 25, 66)'}}>
+      <View style={styles.panelContainer}>
         <View style={{alignSelf: 'center', marginTop: 60}}>
           <Image source={require('../imgs/csm.png')} />
         </View>
@@ -859,8 +1016,8 @@ class ControlPanel extends React.Component {
               leftButtonIcon: null,
             })
           }}>
-            <Icon name="md-pricetag" style={{ color: '#FFF', fontSize: 18 }} />
-            <Text style={{ fontSize: 14, color: '#FFF' }}>主题分类</Text>
+            <Icon name="md-pricetag" style={styles.panelIcon} />
+            <Text style={styles.panelText}>主题分类</Text>
           </ListItem>
           <ListItem iconLeft onPress={() => {
             let nav = this.props.getNavigator()
@@ -872,12 +1029,12 @@ class ControlPanel extends React.Component {
               leftButtonIcon: null,
             })
           }}>
-            <Icon name="md-heart" style={{ color: '#FFF', fontSize: 18 }} />
-            <Text style={{ fontSize: 14, color: '#FFF' }}>收藏</Text>
+            <Icon name="md-heart" style={styles.panelIcon} />
+            <Text style={styles.panelText}>收藏</Text>
           </ListItem>
           {/*<ListItem iconLeft>
-            <Icon name="md-settings" style={{ color: '#FFF', fontSize: 18 }} />
-            <Text style={{ fontSize: 14, color: '#FFF' }}>设置</Text>
+            <Icon name="md-settings" style={styles.panelIcon} />
+            <Text style={styles.panelText}>设置</Text>
           </ListItem>*/}
         </List>
       </View>
@@ -893,6 +1050,7 @@ export default class csm extends React.Component {
   }
 
   componentDidMount() {
+    // Fix：隐藏
     WeChat.registerApp('wx34b38848ff3e63e8')
   }
 
@@ -917,7 +1075,7 @@ export default class csm extends React.Component {
         acceptTap={true}
         useInteractionManager={true}
         ref={(ref) => this._drawer = ref}
-        type="static"
+        type='static'
         openDrawerOffset={100}
         tweenHandler={Drawer.tweenPresets.parallax}
         styles={{drawer: { shadowColor: '#000000', shadowOpacity: 0.8, shadowRadius: 3}}}
@@ -935,7 +1093,7 @@ export default class csm extends React.Component {
               tag: '',
             }
           }}
-          leftButtonTitle="菜单"
+          leftButtonTitle='菜单'
           leftButtonIcon={require('../imgs/Line.png')}
           onLeftButtonPress={() => {
             this.openControlPanel()
@@ -948,34 +1106,60 @@ export default class csm extends React.Component {
   }
 }
 
+// 常用字体颜色
+const backgroundColor = '#EDEDED'
+const textColor = 'rgb(153, 153, 153)'
+const textFontSize = 14
+
+
 const styles = StyleSheet.create({
+  // 大容器
   container: {
     flex: 1,
-    backgroundColor: '#EDEDED',
+    backgroundColor: backgroundColor,
   },
+  // 菜单导航
+  panelContainer: {
+    flex: 1,
+    backgroundColor: 'rgb(171, 25, 66)'
+  },
+  panelIcon: {
+    color: '#FFF',
+    fontSize: 18,
+  },
+  panelText: {
+    fontSize: 14,
+    color: '#FFF',
+  },
+  // 浏览器
+  htmlViewToolbar: {
+    color: '#0A69FE',
+    marginRight: 20
+  },
+  // 列表页面
   separator: {
     height: 2,
-    backgroundColor: '#EDEDED'
-  },
-  tagText: {
-    fontSize: 14,
-    color: 'rgb(153, 153, 153)',
-    textAlign: 'center',
+    backgroundColor: backgroundColor,
   },
   loadingView: {
     flex: 1,
-     flexDirection: 'row',
-     alignItems: 'center',
-     justifyContent: 'center',
-     height: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 40,
   },
   loadingText: {
-    fontSize: 14,
-    color: 'rgb(153, 153, 153)',
+    fontSize: textFontSize,
+    color: textColor,
   },
   listText: {
-    fontSize: 13,
-    color: 'rgb(153, 153, 153)',
+    fontSize: textFontSize,
+    color: textColor,
+  },
+  tagText: {
+    fontSize: textFontSize,
+    color: textColor,
+    textAlign: 'center',
   },
 });
 
