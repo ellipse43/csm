@@ -499,6 +499,7 @@ class ArticleCollectedView extends React.Component {
           renderScrollComponent={props => <RecyclerViewBackedScrollView {...props} />}
           renderSeparator={(sectionID, rowID) => <View key={`${sectionID}-${rowID}`} style={styles.separator} />}
           enableEmptySections={true}
+          removeClippedSubviews={false}
         />
       </View>
     )
@@ -702,6 +703,7 @@ class TabMessages extends React.Component {
     } else {
       dv = <View><List
           dataArray={this.state.items}
+          removeClippedSubviews={false}
           renderFooter={() => {
              return (
               <Button small style={{marginTop: 5, marginBottom: 5, width: 200, alignSelf: 'center'}} onPress={() => {
