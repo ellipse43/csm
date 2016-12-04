@@ -810,9 +810,6 @@ class TagListView extends React.Component {
       isLoading: true,
       items: items,
       currentStart: 0,
-
-      //
-      isCollected: false,
     };
   }
 
