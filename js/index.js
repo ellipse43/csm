@@ -19,6 +19,7 @@ import {
   AsyncStorage,
   Image,
   ActionSheetIOS,
+  Linking,
 } from 'react-native'
 import {
   Container,
@@ -57,6 +58,8 @@ var storage = new Storage({
   defaultExpires: null,
   enableCache: true,
 })
+
+let is_audit = false
 
 // 调试日志
 function logger(...params) {
@@ -179,6 +182,13 @@ class HTMLView extends React.Component {
   }
 
   render() {
+
+    // 为了过审
+    if (is_audit) {
+      Linking.openURL(this.props.uri)
+      return null
+    }
+
     let toolbarView = null
 
     if (this.state.collected === false) {
@@ -1076,6 +1086,17 @@ export default class csm extends React.Component {
   }
 
   componentDidMount() {
+    fetch(`http://7o4zy5.com1.z0.glb.clouddn.com/audit.txt?v=${Date.now()}`).then(response => {
+      if (response.status == 200) {
+        response.text().then(v => {
+          if (v.trim() == 'true') {
+            is_audit = true
+          } else {
+            is_audit = false
+          }
+        })
+      }
+    })
     // Fix：隐藏
     WeChat.registerApp('wx34b38848ff3e63e8')
   }
